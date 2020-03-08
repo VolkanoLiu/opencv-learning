@@ -1,0 +1,10 @@
+.vscode/
+build/
+CMakeFiles/
+result/
+CMakeCache.txt
+cmake_install.cmake
+main.backup.cpp
+Makefile
+out.jpg
+tg.mp4

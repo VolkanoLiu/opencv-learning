@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 2.8)
+project( STI-K04-opencv-project )
+find_package( OpenCV REQUIRED )
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+include_directories( "/usr/local/include/opencv4/opencv2" )
+aux_source_directory(./src DIR_SRCS)
+add_executable( main main.cpp ${DIR_SRCS})
+target_link_libraries( main ${OpenCV_LIBS} )
