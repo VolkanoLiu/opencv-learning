@@ -19,7 +19,6 @@ using namespace std;
 using namespace cv;
 
 int main(int argc, char** argv) {
-  cout << getBuildInformation() << endl;
   FindTarget FT;
   Mat image;
   VideoWriter video("/home/volkano/Downloads/数据集/数据集/out.mp4",
@@ -27,21 +26,29 @@ int main(int argc, char** argv) {
                     Size(3263, 700));
   string base = "/home/volkano/Downloads/数据集/数据集/image";
   string tail = ".jpg";
+
+  unsigned frames = 0;  // The number of images
+  vector<double> rates;
+
+  auto start = chrono::high_resolution_clock::now();
+
   for (size_t index = 0; index < 266; index++) {
-    // Text to be showed on the image
-    vector<string> textLines;
+    vector<string> textLines;  // Text to be showed on the image
+
+    // Create a windows
+    namedWindow("test", WINDOW_GUI_EXPANDED);
 
     // Path configuration
     string num = to_string(index);
     string path = base + num + tail;
     image = imread(path);
 
-    // Create a windows
-    namedWindow("test", WINDOW_GUI_EXPANDED);
     // skip the empty image
     if (image.empty()) {
       cout << "skip image" << index << ".jpg" << endl;
     } else {
+      frames++;
+
       Rect uniqueRect = FT.findUniqueRect(image);
       vector<Rect> targets = FT.findTarget(image);
       Rect targetRect = targets.size() ? targets[0] : Rect(0, 0, 0, 0);
@@ -49,11 +56,18 @@ int main(int argc, char** argv) {
       if (uniqueRect.area() && targetRect.area()) {
         Rect overlapRect = FT.getRectOverlapArea(uniqueRect, targetRect);
         double rate = (double)overlapRect.area() / (double)uniqueRect.area();
-        rectangle(image, targetRect, Scalar(0, 255, 0), 3);
+        rates.push_back(rate);
+        rectangle(image, targetRect, Scalar(0, 0, 0), 3);
 
         // Display nacessacy informations
         stringstream line;
-        line << "Accuracy\t" << fixed << setprecision(2) << rate * 100;
+        line << "Image name\timage" << index << ".jpg";
+        textLines.push_back(line.str());
+        line.str("");
+        line << "Match rate\t" << fixed << setprecision(2) << rate * 100 << "%";
+        textLines.push_back(line.str());
+        line.str("");
+        line << "--白色标记框数据--";
         textLines.push_back(line.str());
         line.str("");
         line << "x\t\t" << uniqueRect.x;
@@ -70,11 +84,15 @@ int main(int argc, char** argv) {
         line.str("");
         line << "area\t\t" << uniqueRect.area();
         textLines.push_back(line.str());
+
       } else {
         if (targetRect.area() != 0) {
-          rectangle(image, targetRect, Scalar(0, 255, 0), 3);
+          rectangle(image, targetRect, Scalar(0, 0, 0), 3);
         }
         stringstream line;
+        line << "Image name\timage" << index << ".jpg";
+        textLines.push_back(line.str());
+        line.str("");
         line << "Accuracy\tnull";
         textLines.push_back(line.str());
       }
@@ -84,23 +102,34 @@ int main(int argc, char** argv) {
                 fontQt("Fira Code", 18, Scalar(0, 0, 255)));
       }
 
-      imshow("test", image);
+      // imshow("test", image);
       video << image;
-      waitKey(10);
+      // cv::waitKey(10);
     }
   }
-  // image = imread("/home/volkano/Downloads/数据集/数据集/image1.jpg");
-  // vector<Rect> rectangles = FT.findTarget(image);
-  // for (auto& rect_n : rectangles) {
-  //   rectangle(image, rect_n, Scalar(0, 0, 0));
-  // }
 
-  // Rect a(2, 2, 2, 2), b(6, 6, 2, 2);
-  // Rect c = FT.getRectOverlapArea(a, b);
-  // cout << c.x << '\t' << c.y << '\t' << c.width << '\t' << c.height << '\t'
-  //      << endl;
+  double rate_sum = 0;
+  for (auto iter = rates.begin(); iter != rates.end(); iter++) {
+    rate_sum += *iter;
+  }
+  rate_sum /= rates.size();
 
-  // imshow("source", image);
-  // waitKey();
+  auto stop = chrono::high_resolution_clock::now();
+  auto duration = chrono::duration_cast<chrono::milliseconds>(stop - start);
+
+  cout << "+----------------------+" << endl;
+  cout << "|    Program result    |" << endl;
+  cout << "+----------+-----------+" << endl;
+  cout << "|" << setiosflags(ios::left) << setw(10) << "Total time"
+       << "|" << setiosflags(ios::right) << setw(8) << duration.count() << " ms"
+       << "|" << endl;
+  cout << "+----------+-----------+" << endl;
+  cout << "|" << setiosflags(ios::left) << setw(10) << "  Frames  "
+       << "|" << setiosflags(ios::right) << setw(8) << frames << "   |" << endl;
+  cout << "+----------+-----------+" << endl;
+  cout << "|" << setiosflags(ios::left) << setw(10) << "Match rate"
+       << "|" << setiosflags(ios::right) << setw(8) << rate_sum * 100 << " % "
+       << "|" << endl;
+  cout << "+----------+-----------+" << endl;
   return 0;
 }
