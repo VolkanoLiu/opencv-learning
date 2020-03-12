@@ -64,6 +64,9 @@ int main(int argc, char** argv) {
         line << "Image name\timage" << index << ".jpg";
         textLines.push_back(line.str());
         line.str("");
+        line << "Frames\t" << frames;
+        textLines.push_back(line.str());
+        line.str("");
         line << "Match rate\t" << fixed << setprecision(2) << rate * 100 << "%";
         textLines.push_back(line.str());
         line.str("");
