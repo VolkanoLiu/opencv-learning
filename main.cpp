@@ -27,23 +27,23 @@ int main(int argc, char** argv) {
   string base = "/home/volkano/Downloads/数据集/数据集/image";
   string tail = ".jpg";
 
-  unsigned frames = 0;  // The number of images
+  unsigned frames = 0;  // 图片的帧数
   vector<double> rates;
 
   auto start = chrono::high_resolution_clock::now();
 
   for (size_t index = 0; index < 266; index++) {
-    vector<string> textLines;  // Text to be showed on the image
+    vector<string> textLines;  // 显示在视频中的字符串
 
-    // Create a windows
+    // 新建一个窗口
     namedWindow("test", WINDOW_GUI_EXPANDED);
 
-    // Path configuration
+    // 读取图片
     string num = to_string(index);
     string path = base + num + tail;
     image = imread(path);
 
-    // skip the empty image
+    // 跳过空图片
     if (image.empty()) {
       cout << "skip image" << index << ".jpg" << endl;
     } else {
@@ -52,14 +52,14 @@ int main(int argc, char** argv) {
       Rect uniqueRect = FT.findUniqueRect(image);
       vector<Rect> targets = FT.findTarget(image);
       Rect targetRect = targets.size() ? targets[0] : Rect(0, 0, 0, 0);
-      // check if the uniqueRect and targetRect are detected
+      // 检查白色边框与标靶是否被识别到
       if (uniqueRect.area() && targetRect.area()) {
         Rect overlapRect = FT.getRectOverlapArea(uniqueRect, targetRect);
         double rate = (double)overlapRect.area() / (double)uniqueRect.area();
         rates.push_back(rate);
         rectangle(image, targetRect, Scalar(0, 0, 0), 3);
 
-        // Display nacessacy informations
+        // 在图片上显示一些数据
         stringstream line;
         line << "Image name\timage" << index << ".jpg";
         textLines.push_back(line.str());
@@ -105,8 +105,8 @@ int main(int argc, char** argv) {
                 fontQt("Fira Code", 18, Scalar(0, 0, 255)));
       }
 
-      // imshow("test", image);
       video << image;
+
       // cv::waitKey(10);
     }
   }

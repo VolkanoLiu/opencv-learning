@@ -7,20 +7,21 @@ std::vector<cv::Rect> FindTarget::findRect(cv::Mat &image_input,
   cv::inRange(image_input, lowScalar, highScalar, image_preprocess);
   cv::Mat verticalKernel, horizonalKernel;
   cv::Mat image_verticalLine, image_horizonalLine, image_line;
+
   verticalKernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(1, 45));
   horizonalKernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(45, 1));
-  // erode and dilate
+  // 对二值化后的图片进行腐蚀和膨胀处理，以获得垂直与水平线
   cv::erode(image_preprocess, image_verticalLine, verticalKernel);
   cv::dilate(image_verticalLine, image_verticalLine, verticalKernel);
   cv::erode(image_preprocess, image_horizonalLine, horizonalKernel);
   cv::dilate(image_horizonalLine, image_horizonalLine, horizonalKernel);
   image_line = image_verticalLine + image_horizonalLine;
 
-  // find rectangle contours
   std::vector<std::vector<cv::Point>> contours;
   std::vector<cv::Vec4i> hierarchy;
   cv::findContours(image_line, contours, hierarchy, cv::RETR_CCOMP,
                    cv::CHAIN_APPROX_NONE);
+
   std::vector<cv::Rect> rectangles;
   for (auto &contour : contours) {
     cv::approxPolyDP(contour, contour, 5, true);
@@ -40,6 +41,7 @@ cv::Rect FindTarget::findUniqueRect(cv::Mat &image_input) {
   if (rectangles.size() < 2) {
     return cv::Rect(0, 0, 0, 0);
   } else {
+    // 将得到的两个轮廓平均处理
     cv::Rect rectangle;
     rectangle.x = (rectangles[0].x + rectangles[1].x) / 2;
     rectangle.y = (rectangles[0].y + rectangles[1].y) / 2;
@@ -59,27 +61,13 @@ std::vector<cv::Rect> FindTarget::findTarget(cv::Mat &image_input) {
   cv::findContours(image_preprocess, contours, hierarchy, cv::RETR_CCOMP,
                    cv::CHAIN_APPROX_NONE);
 
-  // cv::Mat temp = image_input.clone();
   std::vector<cv::Rect> rectangles;
   for (auto &contour : contours) {
     if (cv::contourArea(contour) > 10000) {
-      // cv::approxPolyDP(contour, contour, 5, true);
       rectangles.push_back(cv::boundingRect(contour));
-      // cv::rectangle(image_input, rect, cv::Scalar(0, 0, 0), 3);
-      // for(size_t i = 0; i < contour.size(); i++) {
-      //   cv::circle(image_input, contour[i], 3, cv::Scalar(255, 0, 0), -1);
-      // }
-      // cv::RotatedRect temp = cv::fitEllipse(contour);
-      // cv::Point2f* points = new cv::Point2f[4];
-      // temp.points(points);
-      // for(size_t i = 0; i < 4; i++){
-      //   cv::line(image_input, points[i], points[(i + 1) % 4], cv::Scalar(255,
-      //   255, 0));
-      // }
     }
   }
   return rectangles;
-  // cv::imshow("test", image_input);
 }
 
 cv::Rect FindTarget::getRectOverlapArea(cv::Rect &a, cv::Rect &b) {
